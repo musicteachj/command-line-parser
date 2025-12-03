@@ -1,0 +1,9 @@
+# No external dependencies required
+# This parser uses only Python standard library:
+# - zipfile: for extracting .docx archive
+# - xml.etree.ElementTree: for parsing Word XML
+# - json: for JSON output
+# - argparse: for CLI argument parsing
+# - re: for regex pattern matching
+# - pathlib: for path handling
+
