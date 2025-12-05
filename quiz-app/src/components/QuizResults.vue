@@ -11,13 +11,22 @@ const emit = defineEmits<{
   restart: [];
 }>();
 
-// Since there are no correct answers defined, we just show what the user selected
-const totalAnswered = computed(() => {
-  return Object.keys(props.answers).length;
+// Scoring computed properties
+const correctAnswers = computed(() => {
+  return props.questions.filter(
+    (q) => props.answers[q.id] === q.correctLabel
+  ).length;
 });
 
-const completionPercentage = computed(() => {
-  return Math.round((totalAnswered.value / props.questions.length) * 100);
+const totalQuestions = computed(() => props.questions.length);
+
+const scorePercentage = computed(() => {
+  if (totalQuestions.value === 0) return 0;
+  return Math.round((correctAnswers.value / totalQuestions.value) * 100);
+});
+
+const totalAnswered = computed(() => {
+  return Object.keys(props.answers).length;
 });
 
 const getSelectedChoice = (question: Question): Choice | null => {
@@ -25,6 +34,27 @@ const getSelectedChoice = (question: Question): Choice | null => {
   if (!selectedLabel) return null;
   return question.choices.find((c) => c.label === selectedLabel) ?? null;
 };
+
+const getCorrectChoice = (question: Question): Choice | null => {
+  return question.choices.find((c) => c.label === question.correctLabel) ?? null;
+};
+
+const isCorrect = (question: Question): boolean => {
+  return props.answers[question.id] === question.correctLabel;
+};
+
+const isAnswered = (question: Question): boolean => {
+  return props.answers[question.id] !== undefined;
+};
+
+const getScoreMessage = computed(() => {
+  const percent = scorePercentage.value;
+  if (percent === 100) return "Perfect score! 🎉";
+  if (percent >= 80) return "Excellent work! 🌟";
+  if (percent >= 60) return "Good job! 👍";
+  if (percent >= 40) return "Keep practicing! 📚";
+  return "Don't give up! 💪";
+});
 
 const handleRestart = (): void => {
   emit("restart");
@@ -34,34 +64,84 @@ const handleRestart = (): void => {
 <template>
   <div class="results-container">
     <div class="results-header">
-      <div class="results-icon">
+      <div class="results-icon" :class="{ perfect: scorePercentage === 100 }">
         <svg
+          v-if="scorePercentage >= 60"
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="currentColor"
         >
           <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
         </svg>
+        <svg
+          v-else
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+        </svg>
       </div>
       <h1 class="results-title">Quiz Complete!</h1>
-      <p class="results-subtitle">Here's a summary of your responses</p>
+      <p class="results-subtitle">{{ getScoreMessage }}</p>
     </div>
 
-    <div class="stats-card">
-      <div class="stat">
-        <span class="stat-value">{{ totalAnswered }}</span>
-        <span class="stat-label">Questions Answered</span>
+    <!-- Score Summary Card -->
+    <div class="score-card">
+      <div class="score-circle">
+        <svg viewBox="0 0 36 36" class="circular-chart">
+          <path
+            class="circle-bg"
+            d="M18 2.0845
+              a 15.9155 15.9155 0 0 1 0 31.831
+              a 15.9155 15.9155 0 0 1 0 -31.831"
+          />
+          <path
+            class="circle"
+            :stroke-dasharray="`${scorePercentage}, 100`"
+            d="M18 2.0845
+              a 15.9155 15.9155 0 0 1 0 31.831
+              a 15.9155 15.9155 0 0 1 0 -31.831"
+          />
+        </svg>
+        <div class="score-text">
+          <span class="score-percent">{{ scorePercentage }}%</span>
+        </div>
       </div>
-      <div class="stat-divider"></div>
-      <div class="stat">
-        <span class="stat-value">{{ questions.length }}</span>
-        <span class="stat-label">Total Questions</span>
+      <div class="score-details">
+        <p class="score-summary">
+          You scored <strong>{{ correctAnswers }}</strong> out of <strong>{{ totalQuestions }}</strong>
+        </p>
+        <div class="score-breakdown">
+          <span class="breakdown-item correct">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+            </svg>
+            {{ correctAnswers }} Correct
+          </span>
+          <span class="breakdown-item incorrect">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
+            </svg>
+            {{ totalQuestions - correctAnswers }} Incorrect
+          </span>
+        </div>
       </div>
-      <div class="stat-divider"></div>
-      <div class="stat">
-        <span class="stat-value">{{ completionPercentage }}%</span>
-        <span class="stat-label">Completion</span>
-      </div>
+    </div>
+
+    <div class="pipeline-note">
+      <p class="pipeline-text">
+        This quiz content was originally authored in Word. Behind the scenes, a
+        Python CLI parses the document and this app consumes the generated JSON.
+      </p>
+      <a
+        href="https://github.com/musicteachj/command-line-parser"
+        target="_blank"
+        rel="noopener"
+        class="pipeline-link"
+      >
+        View the document-to-quiz pipeline on GitHub
+      </a>
     </div>
 
     <div class="answers-review">
@@ -71,27 +151,84 @@ const handleRestart = (): void => {
         v-for="(question, index) in questions"
         :key="question.id"
         class="answer-item"
+        :class="{ 
+          correct: isAnswered(question) && isCorrect(question), 
+          incorrect: isAnswered(question) && !isCorrect(question),
+          unanswered: !isAnswered(question)
+        }"
         :style="{ animationDelay: `${index * 0.1}s` }"
       >
         <div class="answer-header">
           <span class="answer-number">Q{{ index + 1 }}</span>
           <span class="answer-question">{{ question.text }}</span>
+          <span class="answer-status">
+            <svg
+              v-if="isAnswered(question) && isCorrect(question)"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              class="status-icon correct"
+            >
+              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+            </svg>
+            <svg
+              v-else-if="isAnswered(question)"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              class="status-icon incorrect"
+            >
+              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
+            </svg>
+            <svg
+              v-else
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              class="status-icon skipped"
+            >
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
+            </svg>
+          </span>
         </div>
-        <div
-          class="answer-response"
-          :class="{ unanswered: !getSelectedChoice(question) }"
-        >
-          <template v-if="getSelectedChoice(question)">
+        
+        <div class="answer-content">
+          <!-- User's Answer -->
+          <div
+            class="answer-response"
+            :class="{ 
+              'user-correct': isAnswered(question) && isCorrect(question),
+              'user-incorrect': isAnswered(question) && !isCorrect(question),
+              'unanswered': !isAnswered(question)
+            }"
+          >
+            <span class="response-prefix">Your answer:</span>
+            <template v-if="getSelectedChoice(question)">
+              <span class="response-label">{{
+                getSelectedChoice(question)?.label
+              }}</span>
+              <span class="response-text">{{
+                getSelectedChoice(question)?.text
+              }}</span>
+            </template>
+            <template v-else>
+              <span class="response-text not-answered">Not answered</span>
+            </template>
+          </div>
+
+          <!-- Correct Answer (shown if user was wrong or didn't answer) -->
+          <div
+            v-if="!isCorrect(question) || !isAnswered(question)"
+            class="answer-response correct-answer"
+          >
+            <span class="response-prefix">Correct answer:</span>
             <span class="response-label">{{
-              getSelectedChoice(question)?.label
+              getCorrectChoice(question)?.label
             }}</span>
             <span class="response-text">{{
-              getSelectedChoice(question)?.text
+              getCorrectChoice(question)?.text
             }}</span>
-          </template>
-          <template v-else>
-            <span class="response-text">Not answered</span>
-          </template>
+          </div>
         </div>
       </div>
     </div>
@@ -144,6 +281,10 @@ const handleRestart = (): void => {
   animation: pulse 2s infinite;
 }
 
+.results-icon.perfect {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
 @keyframes pulse {
   0%,
   100% {
@@ -174,42 +315,128 @@ const handleRestart = (): void => {
   font-size: 0.875rem;
 }
 
-.stats-card {
+/* Score Card Styles */
+.score-card {
   display: flex;
-  justify-content: center;
   align-items: center;
   gap: 1.5rem;
-  padding: 0.875rem 1.5rem;
+  padding: 1.25rem 1.5rem;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   margin-bottom: 1.25rem;
 }
 
-.stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.125rem;
+.pipeline-note {
+  margin-bottom: 1.25rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  border: 1px dashed var(--border-color);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
 }
 
-.stat-value {
-  font-size: 1.375rem;
+.pipeline-link {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.25rem;
+  font-weight: 500;
+  color: var(--accent-color);
+  text-decoration: none;
+}
+
+.pipeline-link:hover {
+  text-decoration: underline;
+}
+
+.score-circle {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+}
+
+.circular-chart {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.circle-bg {
+  fill: none;
+  stroke: var(--bg-tertiary);
+  stroke-width: 3;
+}
+
+.circle {
+  fill: none;
+  stroke: var(--accent-color);
+  stroke-width: 3;
+  stroke-linecap: round;
+  animation: progress 1s ease-out forwards;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+@keyframes progress {
+  0% {
+    stroke-dasharray: 0, 100;
+  }
+}
+
+.score-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.score-percent {
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--accent-color);
 }
 
-.stat-label {
-  font-size: 0.625rem;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.score-details {
+  flex: 1;
 }
 
-.stat-divider {
-  width: 1px;
-  height: 2rem;
-  background: var(--border-color);
+.score-summary {
+  font-size: 1rem;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.score-summary strong {
+  color: var(--accent-color);
+}
+
+.score-breakdown {
+  display: flex;
+  gap: 1rem;
+}
+
+.breakdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.breakdown-item svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.breakdown-item.correct {
+  color: #10b981;
+}
+
+.breakdown-item.incorrect {
+  color: #ef4444;
 }
 
 .answers-review {
@@ -230,6 +457,22 @@ const handleRestart = (): void => {
   border-radius: 10px;
   margin-bottom: 0.5rem;
   animation: slideIn 0.4s ease-out both;
+  transition: border-color 0.2s ease;
+}
+
+.answer-item.correct {
+  border-color: rgba(16, 185, 129, 0.4);
+  background: linear-gradient(to right, rgba(16, 185, 129, 0.05), transparent);
+}
+
+.answer-item.incorrect {
+  border-color: rgba(239, 68, 68, 0.4);
+  background: linear-gradient(to right, rgba(239, 68, 68, 0.05), transparent);
+}
+
+.answer-item.unanswered {
+  border-color: rgba(234, 179, 8, 0.4);
+  background: linear-gradient(to right, rgba(234, 179, 8, 0.05), transparent);
 }
 
 @keyframes slideIn {
@@ -269,6 +512,35 @@ const handleRestart = (): void => {
   font-weight: 500;
   font-size: 0.8125rem;
   line-height: 1.4;
+  flex: 1;
+}
+
+.answer-status {
+  flex-shrink: 0;
+}
+
+.status-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.status-icon.correct {
+  color: #10b981;
+}
+
+.status-icon.incorrect {
+  color: #ef4444;
+}
+
+.status-icon.skipped {
+  color: #eab308;
+}
+
+.answer-content {
+  margin-left: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
 }
 
 .answer-response {
@@ -276,13 +548,32 @@ const handleRestart = (): void => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.375rem 0.625rem;
-  background: var(--accent-bg);
   border-radius: 6px;
-  margin-left: 2rem;
+}
+
+.answer-response.user-correct {
+  background: rgba(16, 185, 129, 0.15);
+}
+
+.answer-response.user-incorrect {
+  background: rgba(239, 68, 68, 0.15);
 }
 
 .answer-response.unanswered {
   background: var(--bg-tertiary);
+}
+
+.answer-response.correct-answer {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px dashed rgba(16, 185, 129, 0.3);
+}
+
+.response-prefix {
+  font-size: 0.6875rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
 }
 
 .response-label {
@@ -291,12 +582,25 @@ const handleRestart = (): void => {
   justify-content: center;
   width: 1.375rem;
   height: 1.375rem;
-  background: var(--accent-color);
-  color: var(--bg-primary);
   font-weight: 600;
   font-size: 0.6875rem;
   border-radius: 4px;
   flex-shrink: 0;
+}
+
+.user-correct .response-label {
+  background: #10b981;
+  color: white;
+}
+
+.user-incorrect .response-label {
+  background: #ef4444;
+  color: white;
+}
+
+.correct-answer .response-label {
+  background: #10b981;
+  color: white;
 }
 
 .response-text {
@@ -304,7 +608,7 @@ const handleRestart = (): void => {
   font-size: 0.8125rem;
 }
 
-.answer-response.unanswered .response-text {
+.response-text.not-answered {
   color: var(--text-secondary);
   font-style: italic;
 }
@@ -337,17 +641,16 @@ const handleRestart = (): void => {
 }
 
 @media (max-width: 600px) {
-  .stats-card {
+  .score-card {
     flex-direction: column;
-    gap: 1rem;
+    text-align: center;
   }
 
-  .stat-divider {
-    width: 3rem;
-    height: 1px;
+  .score-breakdown {
+    justify-content: center;
   }
 
-  .answer-response {
+  .answer-content {
     margin-left: 0;
   }
 }

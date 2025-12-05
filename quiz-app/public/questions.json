@@ -3,6 +3,7 @@
     {
       "id": 1,
       "text": "What color is the sky?",
+      "correctLabel": "A",
       "choices": [
         {
           "label": "A",
@@ -25,6 +26,7 @@
     {
       "id": 2,
       "text": "Did you use AI tools in creating this solution?",
+      "correctLabel": "A",
       "choices": [
         {
           "label": "A",
@@ -47,6 +49,7 @@
     {
       "id": 3,
       "text": "If so, which ones",
+      "correctLabel": "B",
       "choices": [
         {
           "label": "A",
