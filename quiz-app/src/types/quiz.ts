@@ -6,6 +6,7 @@ export interface Choice {
 export interface Question {
   id: number;
   text: string;
+  correctLabel: string;
   choices: Choice[];
 }
 
