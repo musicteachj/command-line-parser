@@ -20,6 +20,7 @@ This project demonstrates an end-to-end technical workflow: parsing structured d
 - **Interactive Quiz UI**: Clean, responsive interface with real-time progress tracking
 - **State Persistence**: Answers saved to localStorage—users can leave and return without losing progress
 - **Automated Deployment**: Push to `main` triggers the full build pipeline and deploys to GitHub Pages
+- **Automated Tests**: Includes tests for both parsing logic and UI behavior
 
 ---
 
@@ -30,6 +31,7 @@ This project demonstrates an end-to-end technical workflow: parsing structured d
 | **Document Parser** | Python 3 (stdlib only: `zipfile`, `xml.etree`, `argparse`) |
 | **Frontend**        | Vue 3 with Composition API, TypeScript                     |
 | **Build Tool**      | Vite                                                       |
+| **Testing**         | Python `unittest`, Vitest                                  |
 | **CI/CD**           | GitHub Actions                                             |
 | **Hosting**         | GitHub Pages                                               |
 
@@ -41,18 +43,25 @@ This project demonstrates an end-to-end technical workflow: parsing structured d
 command-line-parser/
 ├── parser/
 │   ├── parse_docx.py       # CLI tool for .docx → JSON conversion
-│   └── requirements.txt    # Dependencies (stdlib only)
+│   ├── requirements.txt    # Dependencies (stdlib only)
+│   └── tests/
+│       ├── test_parser.py      # Parser unit tests
+│       └── create_test_docx.py # Test fixture generator
 ├── quiz-app/
 │   ├── src/
 │   │   ├── App.vue              # Main application with quiz logic
 │   │   ├── components/
 │   │   │   ├── QuizQuestion.vue # Question display component
 │   │   │   └── QuizResults.vue  # Results summary component
-│   │   └── types/
-│   │       └── quiz.ts          # TypeScript interfaces
+│   │   ├── types/
+│   │   │   └── quiz.ts          # TypeScript interfaces
+│   │   ├── utils/
+│   │   │   └── quiz-helpers.ts  # Testable helper functions
+│   │   └── __tests__/
+│   │       └── quiz-helpers.test.ts # Frontend unit tests
 │   ├── public/
 │   │   └── questions.json       # Generated quiz data
-│   └── vite.config.ts           # Vite configuration
+│   └── vite.config.ts           # Vite + Vitest configuration
 ├── .github/
 │   └── workflows/
 │       └── deploy.yml           # CI/CD pipeline
@@ -123,6 +132,40 @@ npm run dev
 ```
 
 The app will be available at `http://localhost:5173`
+
+---
+
+## Testing
+
+This project includes automated tests for both the parser and frontend.
+
+### Parser Tests
+
+```bash
+cd parser
+python3 tests/test_parser.py
+```
+
+Runs **11 tests** covering:
+
+- JSON structure validation
+- Question extraction and counting
+- Choice parsing and labeling
+- Error handling for invalid files
+
+### Frontend Tests
+
+```bash
+cd quiz-app
+npm test
+```
+
+Runs **22 tests** using Vitest covering:
+
+- Progress calculation
+- Answer counting
+- Quiz completion detection
+- Question validation
 
 ---
 
