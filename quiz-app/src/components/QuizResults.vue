@@ -13,9 +13,8 @@ const emit = defineEmits<{
 
 // Scoring computed properties
 const correctAnswers = computed(() => {
-  return props.questions.filter(
-    (q) => props.answers[q.id] === q.correctLabel
-  ).length;
+  return props.questions.filter((q) => props.answers[q.id] === q.correctLabel)
+    .length;
 });
 
 const totalQuestions = computed(() => props.questions.length);
@@ -25,10 +24,6 @@ const scorePercentage = computed(() => {
   return Math.round((correctAnswers.value / totalQuestions.value) * 100);
 });
 
-const totalAnswered = computed(() => {
-  return Object.keys(props.answers).length;
-});
-
 const getSelectedChoice = (question: Question): Choice | null => {
   const selectedLabel = props.answers[question.id];
   if (!selectedLabel) return null;
@@ -36,7 +31,9 @@ const getSelectedChoice = (question: Question): Choice | null => {
 };
 
 const getCorrectChoice = (question: Question): Choice | null => {
-  return question.choices.find((c) => c.label === question.correctLabel) ?? null;
+  return (
+    question.choices.find((c) => c.label === question.correctLabel) ?? null
+  );
 };
 
 const isCorrect = (question: Question): boolean => {
@@ -79,7 +76,9 @@ const handleRestart = (): void => {
           viewBox="0 0 24 24"
           fill="currentColor"
         >
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+          <path
+            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+          />
         </svg>
       </div>
       <h1 class="results-title">Quiz Complete!</h1>
@@ -110,18 +109,31 @@ const handleRestart = (): void => {
       </div>
       <div class="score-details">
         <p class="score-summary">
-          You scored <strong>{{ correctAnswers }}</strong> out of <strong>{{ totalQuestions }}</strong>
+          You scored <strong>{{ correctAnswers }}</strong> out of
+          <strong>{{ totalQuestions }}</strong>
         </p>
         <div class="score-breakdown">
           <span class="breakdown-item correct">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path
+                d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
+              />
             </svg>
             {{ correctAnswers }} Correct
           </span>
           <span class="breakdown-item incorrect">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path
+                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"
+              />
             </svg>
             {{ totalQuestions - correctAnswers }} Incorrect
           </span>
@@ -151,10 +163,10 @@ const handleRestart = (): void => {
         v-for="(question, index) in questions"
         :key="question.id"
         class="answer-item"
-        :class="{ 
-          correct: isAnswered(question) && isCorrect(question), 
+        :class="{
+          correct: isAnswered(question) && isCorrect(question),
           incorrect: isAnswered(question) && !isCorrect(question),
-          unanswered: !isAnswered(question)
+          unanswered: !isAnswered(question),
         }"
         :style="{ animationDelay: `${index * 0.1}s` }"
       >
@@ -169,7 +181,9 @@ const handleRestart = (): void => {
               fill="currentColor"
               class="status-icon correct"
             >
-              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+              <path
+                d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
+              />
             </svg>
             <svg
               v-else-if="isAnswered(question)"
@@ -178,7 +192,9 @@ const handleRestart = (): void => {
               fill="currentColor"
               class="status-icon incorrect"
             >
-              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
+              <path
+                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"
+              />
             </svg>
             <svg
               v-else
@@ -187,19 +203,21 @@ const handleRestart = (): void => {
               fill="currentColor"
               class="status-icon skipped"
             >
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
+              <path
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"
+              />
             </svg>
           </span>
         </div>
-        
+
         <div class="answer-content">
           <!-- User's Answer -->
           <div
             class="answer-response"
-            :class="{ 
+            :class="{
               'user-correct': isAnswered(question) && isCorrect(question),
               'user-incorrect': isAnswered(question) && !isCorrect(question),
-              'unanswered': !isAnswered(question)
+              unanswered: !isAnswered(question),
             }"
           >
             <span class="response-prefix">Your answer:</span>
