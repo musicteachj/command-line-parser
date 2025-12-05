@@ -129,6 +129,21 @@ const handleRestart = (): void => {
       </div>
     </div>
 
+    <div class="pipeline-note">
+      <p class="pipeline-text">
+        This quiz content was originally authored in Word. Behind the scenes, a
+        Python CLI parses the document and this app consumes the generated JSON.
+      </p>
+      <a
+        href="https://github.com/musicteachj/command-line-parser"
+        target="_blank"
+        rel="noopener"
+        class="pipeline-link"
+      >
+        View the document-to-quiz pipeline on GitHub
+      </a>
+    </div>
+
     <div class="answers-review">
       <h2 class="review-title">Your Answers</h2>
 
@@ -310,6 +325,29 @@ const handleRestart = (): void => {
   border: 1px solid var(--border-color);
   border-radius: 12px;
   margin-bottom: 1.25rem;
+}
+
+.pipeline-note {
+  margin-bottom: 1.25rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  border: 1px dashed var(--border-color);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.pipeline-link {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.25rem;
+  font-weight: 500;
+  color: var(--accent-color);
+  text-decoration: none;
+}
+
+.pipeline-link:hover {
+  text-decoration: underline;
 }
 
 .score-circle {

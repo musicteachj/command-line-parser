@@ -9,6 +9,7 @@ const questions = ref<Question[]>([]);
 const answers: Answers = reactive({});
 const currentQuestionIndex = ref(0);
 const quizCompleted = ref(false);
+const hasStarted = ref(false);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
 
@@ -16,6 +17,7 @@ const error = ref<string | null>(null);
 const STORAGE_KEY_ANSWERS = "quiz-answers";
 const STORAGE_KEY_INDEX = "quiz-current-index";
 const STORAGE_KEY_COMPLETED = "quiz-completed";
+const STORAGE_KEY_STARTED = "quiz-started";
 
 // Computed
 const currentQuestion = computed(
@@ -55,6 +57,7 @@ const loadSavedState = (): void => {
     const savedAnswers = localStorage.getItem(STORAGE_KEY_ANSWERS);
     const savedIndex = localStorage.getItem(STORAGE_KEY_INDEX);
     const savedCompleted = localStorage.getItem(STORAGE_KEY_COMPLETED);
+    const savedStarted = localStorage.getItem(STORAGE_KEY_STARTED);
 
     if (savedAnswers) {
       Object.assign(answers, JSON.parse(savedAnswers));
@@ -64,6 +67,9 @@ const loadSavedState = (): void => {
     }
     if (savedCompleted === "true") {
       quizCompleted.value = true;
+    }
+    if (savedStarted === "true") {
+      hasStarted.value = true;
     }
   } catch (e) {
     console.error("Error loading saved state:", e);
@@ -79,6 +85,7 @@ const saveToLocalStorage = (): void => {
       currentQuestionIndex.value.toString()
     );
     localStorage.setItem(STORAGE_KEY_COMPLETED, quizCompleted.value.toString());
+    localStorage.setItem(STORAGE_KEY_STARTED, hasStarted.value.toString());
   } catch (e) {
     console.error("Error saving state:", e);
   }
@@ -88,6 +95,7 @@ const saveToLocalStorage = (): void => {
 watch(answers, saveToLocalStorage, { deep: true });
 watch(currentQuestionIndex, saveToLocalStorage);
 watch(quizCompleted, saveToLocalStorage);
+watch(hasStarted, saveToLocalStorage);
 
 // Actions
 const selectAnswer = (label: string): void => {
@@ -116,6 +124,21 @@ const goPrevious = (): void => {
 
 const submitQuiz = (): void => {
   quizCompleted.value = true;
+};
+
+const startQuiz = (): void => {
+  hasStarted.value = true;
+  quizCompleted.value = false;
+
+  // Ensure we have a valid starting index
+  if (questions.value.length > 0) {
+    if (
+      currentQuestionIndex.value < 0 ||
+      currentQuestionIndex.value >= questions.value.length
+    ) {
+      currentQuestionIndex.value = 0;
+    }
+  }
 };
 
 const restartQuiz = (): void => {
@@ -159,6 +182,26 @@ onMounted(async () => {
         <button @click="loadQuestions">Try Again</button>
       </div>
 
+      <!-- Intro / Landing Screen -->
+      <div
+        v-else-if="!quizCompleted && !hasStarted && questions.length"
+        class="intro"
+      >
+        <div class="intro-card">
+          <h2 class="intro-title">Document-driven quiz</h2>
+          <p class="intro-text">
+            This quiz was generated from a Word document via a custom Python parser.
+          </p>
+          <p class="intro-subtext">
+            Behind the scenes, a CLI extracts questions into JSON that this app
+            renders as an interactive experience.
+          </p>
+          <button class="intro-button" @click="startQuiz">
+            Start Quiz
+          </button>
+        </div>
+      </div>
+
       <!-- Results Screen -->
       <QuizResults
         v-else-if="quizCompleted"
@@ -168,7 +211,7 @@ onMounted(async () => {
       />
 
       <!-- Quiz Screen -->
-      <template v-else-if="currentQuestion">
+      <template v-else-if="hasStarted && currentQuestion">
         <!-- Progress Bar -->
         <div class="progress-container">
           <div class="progress-bar">
@@ -344,6 +387,63 @@ onMounted(async () => {
   border: none;
   border-radius: 8px;
   cursor: pointer;
+}
+
+.intro {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+}
+
+.intro-card {
+  max-width: 520px;
+  width: 100%;
+  padding: 1.75rem 1.75rem 1.5rem;
+  border-radius: 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+}
+
+.intro-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.intro-text {
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+}
+
+.intro-subtext {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.intro-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  background: var(--accent-gradient);
+  color: var(--bg-primary);
+  box-shadow: 0 10px 25px rgba(var(--accent-rgb), 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.intro-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 32px rgba(var(--accent-rgb), 0.45);
 }
 
 .progress-container {
